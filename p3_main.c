@@ -5,49 +5,99 @@
 
 int main(void)
 {
-    Hardware_Setup();
-    ANSELBCLR = 0b0000111000000000;
+    Hardware_Setup();   // Initialize switches, buttons and LEDs
+    ANSELBCLR = 0b0000111000000000;  // ANSB9, ANSB10, ANSB11 = 0
 
     __asm__ __volatile__(
-        // Configure PORTG as OUTPUT (PMODA_4, PMODA_8 are on PORTG)
+        // PORT C - PMODA_1, PMODA_2  (RC2, RC1)
+        // PORT G - PMODA_4, PMODA_8  (RG6, RG7)
+
+        // Configure PORTC as OUTPUT (same template)
+        "la   $s0, TRISC                   \n\t"
+        "li   $t0, 0x0000                  \n\t"
+        "sw   $t0, 0($s0)                  \n\t"
+
+        // Configure PORTG as OUTPUT (needed for PMODA_4/8)
         "la   $s0, TRISG                   \n\t"
         "li   $t0, 0x0000                  \n\t"
+        "sw   $t0, 0($s0)                  \n\t"
+
+        // Disable analog on RG6 & RG7 (important: PMODA_4/8 are AN16/AN17 capable)
+        "la   $s0, ANSELGCLR               \n\t"
+        "li   $t0, 0x00C0                  \n\t"   // bits 6 and 7
         "sw   $t0, 0($s0)                  \n\t"
     );
 
     while (1)
     {
         __asm__ __volatile__(
-            // ===== HIGH delay count =====
+            // ===== delay counts (same template style) =====
             "lui  $t0, 0x0000               \n\t"
             "ori  $t0, $t0, 0x028F          \n\t"
 
-            // ===== LOW delay count =====
             "lui  $t4, 0x0000               \n\t"
             "ori  $t4, $t4, 0x028F          \n\t"
 
-            // Output HIGH on PMODA_4 (RG6)  -> 0x0040
-            "li   $t3, 0x0040               \n\t"
-            "la   $s1, LATG                 \n\t"
-            "sw   $t3, 0($s1)               \n\t"
+            // latch addresses (we now have TWO ports)
+            "la   $s1, LATC                 \n\t"
+            "la   $s2, LATG                 \n\t"
 
-            // HIGH interval
-            "Loop_On:                       \n\t"
+
+            // ========= Step 1: RG7 (PMODA_8) ON =========
+            "li   $t3, 0x0000               \n\t"
+            "sw   $t3, 0($s1)               \n\t"   // LATC = 0
+            "li   $t3, 0x0080               \n\t"
+            "sw   $t3, 0($s2)               \n\t"   // LATG bit7
+
+            "Loop_1:                        \n\t"
             "addi $t0, $t0, -1              \n\t"
-            "bne  $t0, $zero, Loop_On       \n\t"
+            "bne  $t0, $zero, Loop_1        \n\t"
             "nop                            \n\t"
 
-            // Output LOW
+
+            // ========= Step 2: RG6 (PMODA_4) ON =========
             "li   $t3, 0x0000               \n\t"
             "sw   $t3, 0($s1)               \n\t"
+            "li   $t3, 0x0040               \n\t"
+            "sw   $t3, 0($s2)               \n\t"
 
-            // LOW interval
-            "Loop_Off:                      \n\t"
+            "Loop_2:                        \n\t"
             "addi $t4, $t4, -1              \n\t"
-            "bne  $t4, $zero, Loop_Off      \n\t"
+            "bne  $t4, $zero, Loop_2        \n\t"
+            "nop                            \n\t"
+
+
+            // reload delays (same template)
+            "lui  $t0, 0x0000               \n\t"
+            "ori  $t0, $t0, 0x028F          \n\t"
+            "lui  $t4, 0x0000               \n\t"
+            "ori  $t4, $t4, 0x028F          \n\t"
+
+
+            // ========= Step 3: RC2 (PMODA_1) ON =========
+            "li   $t3, 0x0000               \n\t"
+            "sw   $t3, 0($s2)               \n\t"   // LATG = 0
+            "li   $t3, 0x0004               \n\t"
+            "sw   $t3, 0($s1)               \n\t"   // LATC bit2
+
+            "Loop_3:                        \n\t"
+            "addi $t0, $t0, -1              \n\t"
+            "bne  $t0, $zero, Loop_3        \n\t"
+            "nop                            \n\t"
+
+
+            // ========= Step 4: RC1 (PMODA_2) ON =========
+            "li   $t3, 0x0000               \n\t"
+            "sw   $t3, 0($s2)               \n\t"
+            "li   $t3, 0x0002               \n\t"
+            "sw   $t3, 0($s1)               \n\t"
+
+            "Loop_4:                        \n\t"
+            "addi $t4, $t4, -1              \n\t"
+            "bne  $t4, $zero, Loop_4        \n\t"
             "nop                            \n\t"
         );
     }
 
-    return (EXIT_FAILURE);
+    return (EXIT_FAILURE);   // Should never reach this statement
 }

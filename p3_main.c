@@ -24,7 +24,7 @@ int main(void)
 
         // Disable analog on RG7 & RG8
         "la   $s0, ANSELGCLR               \n\t"
-        "li   $t0, 0x0180                  \n\t"
+        "li   $t0, 0x0180                  \n\t"   // bits 7 and 8
         "sw   $t0, 0($s0)                  \n\t"
     );
 
@@ -43,12 +43,11 @@ int main(void)
             "la   $s2, LATG                 \n\t"
 
 
-            // ===== Step 1: 1001 =====
-            // RG8 + RG7
+            // RG7 PMODA_8
             "li   $t3, 0x0000               \n\t"
             "sw   $t3, 0($s1)               \n\t"   // LATC = 0
-            "li   $t3, 0x0180               \n\t"
-            "sw   $t3, 0($s2)               \n\t"   // LATG = RG8 + RG7
+            "li   $t3, 0x0080               \n\t"
+            "sw   $t3, 0($s2)               \n\t"   // LATG bit7
 
             "Loop_1:                        \n\t"
             "addi $t0, $t0, -1              \n\t"
@@ -56,12 +55,11 @@ int main(void)
             "nop                            \n\t"
 
 
-            // ===== Step 2: 1100 =====
-            // RG8 + RC2
-            "li   $t3, 0x0004               \n\t"
-            "sw   $t3, 0($s1)               \n\t"   // LATC = RC2
+            // RG8 PMODA_9
+            "li   $t3, 0x0000               \n\t"
+            "sw   $t3, 0($s1)               \n\t"
             "li   $t3, 0x0100               \n\t"
-            "sw   $t3, 0($s2)               \n\t"   // LATG = RG8
+            "sw   $t3, 0($s2)               \n\t"
 
             "Loop_2:                        \n\t"
             "addi $t4, $t4, -1              \n\t"
@@ -76,12 +74,11 @@ int main(void)
             "ori  $t4, $t4, 0x028F          \n\t"
 
 
-            // ===== Step 3: 0110 =====
-            // RC2 + RC1
-            "li   $t3, 0x0006               \n\t"
-            "sw   $t3, 0($s1)               \n\t"   // LATC = RC2 + RC1
+            // RC2 (PMODA_1)
             "li   $t3, 0x0000               \n\t"
             "sw   $t3, 0($s2)               \n\t"   // LATG = 0
+            "li   $t3, 0x0004               \n\t"
+            "sw   $t3, 0($s1)               \n\t"   // LATC bit2
 
             "Loop_3:                        \n\t"
             "addi $t0, $t0, -1              \n\t"
@@ -89,12 +86,11 @@ int main(void)
             "nop                            \n\t"
 
 
-            // ===== Step 4: 0011 =====
-            // RC1 + RG7
+            // RC1 (PMODA_2)
+            "li   $t3, 0x0000               \n\t"
+            "sw   $t3, 0($s2)               \n\t"
             "li   $t3, 0x0002               \n\t"
-            "sw   $t3, 0($s1)               \n\t"   // LATC = RC1
-            "li   $t3, 0x0080               \n\t"
-            "sw   $t3, 0($s2)               \n\t"   // LATG = RG7
+            "sw   $t3, 0($s1)               \n\t"
 
             "Loop_4:                        \n\t"
             "addi $t4, $t4, -1              \n\t"
@@ -103,5 +99,5 @@ int main(void)
         );
     }
 
-    return (EXIT_FAILURE);
+    return (EXIT_FAILURE);   // Should never reach this statement
 }

@@ -11,3 +11,10 @@
   3) 0110 = RC2 + RC1 → LATG = 0x0000, LATC = 0x0006
   4) 0011 = RC1 + RG7 → LATG = 0x0080, LATC = 0x0002
 4) and never ever comine Latch C bits with Latch G bits
+
+
+
+-----
+Task 4 Diagram:
+<img width="880" height="558" alt="Screenshot 2026-03-12 at 8 10 35 AM" src="https://github.com/user-attachments/assets/a918f1ec-b295-40e9-b5e7-0c8008125b45" />
+
